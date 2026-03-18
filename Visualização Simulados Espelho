@@ -10,7 +10,15 @@ fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9
     linhas.forEach((linha, i) => {
       if (!linha.trim()) return;
 
-      const cols = linha.split(";"); // <- AQUI
+      // Detecta separador automaticamente
+      let cols;
+      if (linha.includes("\t")) {
+        cols = linha.split("\t");
+      } else if (linha.includes(";")) {
+        cols = linha.split(";");
+      } else {
+        cols = linha.split(",");
+      }
 
       html += "<tr>";
       cols.forEach(col => {
