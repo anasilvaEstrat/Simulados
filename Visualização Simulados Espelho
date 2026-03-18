@@ -1,56 +1,115 @@
-<table border="1" id="tabela"></table>
-
 <script>
-fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv")
-  .then(res => res.text())
-  .then(text => {
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv';
 
-    function parseCSV(str) {
-      const linhas = [];
-      let linha = [];
-      let valor = "";
-      let dentroAspas = false;
+let RAW=[], filtered=[], sortKey='', sortDir=1, page=0, ps=25;
 
-      for (let i = 0; i < str.length; i++) {
-        const char = str[i];
+// ---------- CSV PARSER ----------
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
 
-        if (char === '"') {
-          dentroAspas = !dentroAspas;
-        } 
-        else if (char === ',' && !dentroAspas) {
-          linha.push(valor);
-          valor = "";
-        } 
-        else if (char === '\n' && !dentroAspas) {
-          linha.push(valor);
-          linhas.push(linha);
-          linha = [];
-          valor = "";
-        } 
-        else {
-          valor += char;
-        }
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQ = !inQ;
       }
-
-      return linhas;
+    } else if (c === ',' && !inQ) {
+      result.push(cur);
+      cur = '';
+    } else {
+      cur += c;
     }
+  }
 
-    const tabela = parseCSV(text);
+  result.push(cur);
+  return result;
+}
 
-    let html = "";
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = splitCSVLine(lines[0]);
 
-    tabela.forEach((linha, i) => {
-      if (!linha.length) return;
-
-      html += "<tr>";
-      linha.forEach(col => {
-        html += i === 0
-          ? `<th>${col}</th>`
-          : `<td>${col}</td>`;
-      });
-      html += "</tr>";
+  return lines.slice(1).map(line => {
+    const vals = splitCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h.trim()] = (vals[i] || '').trim();
     });
-
-    document.getElementById("tabela").innerHTML = html;
+    return obj;
   });
+}
+
+// ---------- LOAD ----------
+async function loadData() {
+  const res = await fetch(SHEET_URL + '&t=' + Date.now());
+  const text = await res.text();
+
+  RAW = parseCSV(text);
+  applyFilter();
+}
+
+// ---------- DATE ----------
+function parseDate(s) {
+  if (!s) return new Date(2099,0,1);
+  const [d,m,y] = s.split('/');
+  return new Date(+y, +m-1, +d);
+}
+
+// ---------- FILTER ----------
+function applyFilter() {
+  filtered = [...RAW];
+
+  if (sortKey) doSort();
+
+  page = 0;
+  render();
+}
+
+// ---------- SORT ----------
+function sort(k) {
+  sortDir = sortKey === k ? -sortDir : 1;
+  sortKey = k;
+  doSort();
+  render();
+}
+
+function doSort() {
+  filtered.sort((a, b) => {
+    let va = a[sortKey] || '';
+    let vb = b[sortKey] || '';
+
+    if (sortKey === 'DATA')
+      return sortDir * (parseDate(va) - parseDate(vb));
+
+    if (sortKey === 'QUESTÕES')
+      return sortDir * ((parseInt(va)||0) - (parseInt(vb)||0));
+
+    return sortDir * va.localeCompare(vb, 'pt-BR');
+  });
+}
+
+// ---------- RENDER ----------
+function render() {
+  const tbody = document.getElementById('tbody');
+
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>${r['Status']}</td>
+      <td>${r['Vertical']}</td>
+      <td>${r['Tipo']}</td>
+      <td>${r['Simulado']}</td>
+      <td>${r['DATA']}</td>
+      <td>${r['QUESTÕES']}</td>
+      <td>${r['Responsável']}</td>
+    </tr>
+  `).join('');
+}
+
+// ---------- INIT ----------
+loadData();
 </script>
