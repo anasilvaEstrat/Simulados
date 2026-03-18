@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espelho de Simulados 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --surface2: #f1f3f5;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #111827;
+    --text2: #374151;
+    --muted: #6b7280;
+    --dim: #9ca3af;
+    --accent: #2563eb;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --blue: #1d4ed8;
+    --blue-bg: #eff6ff;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+    --coral: #dc2626;
+    --coral-bg: #fef2f2;
+    --teal: #0f766e;
+    --teal-bg: #f0fdfa;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .header-left {}
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 14px;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .refresh-btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+  .refresh-btn svg { width: 13px; height: 13px; }
+  .refresh-btn.loading svg { animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .last-updated { font-size: 11px; color: var(--dim); }
+
+  /* State */
+  .state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 3.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    text-align: center;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .state-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .state-desc { font-size: 13px; color: var(--muted); max-width: 380px; line-height: 1.6; }
+  .retry-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 16px;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .retry-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.125rem;
+  }
+  .stat-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .stat-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .stat.s-green .stat-value { color: var(--green); }
+  .stat.s-amber .stat-value { color: var(--amber); }
+  .stat.s-blue .stat-value { color: var(--blue); }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: var(--dim); pointer-events: none; }
+  input[type=text] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  input[type=text]::placeholder { color: var(--dim); }
+
+  select {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 28px 7px 10px;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    transition: border-color .15s;
+  }
+  select:focus { border-color: var(--accent); }
+
+  .btn-reset {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 14px;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-reset:hover { color: var(--text); border-color: var(--text); }
+  .count-badge { font-size: 12px; color: var(--dim); white-space: nowrap; }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition: color .12s;
+  }
+  th:hover { color: var(--text); }
+  th.asc { color: var(--accent); }
+  th.asc::after { content: ' ↑'; font-size: 10px; }
+  th.desc { color: var(--accent); }
+  th.desc::after { content: ' ↓'; font-size: 10px; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 10px 14px; color: var(--text2); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.sname { font-weight: 500; color: var(--text); max-width: 340px; }
+  td.mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--muted); }
+  td.num { font-size: 13px; font-weight: 500; text-align: center; color: var(--text); font-family: 'SF Mono', 'Fira Code', monospace; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .bdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .b-ok  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .b-ok  .bdot { background: var(--green); }
+  .b-wip { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .b-wip .bdot { background: var(--amber); }
+  .b-em   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #bfdbfe; }
+  .b-ev   { background: var(--purple-bg); color: var(--purple); border: 1px solid #ddd6fe; }
+  .b-emed { background: var(--coral-bg);  color: var(--coral);  border: 1px solid #fecaca; }
+  .b-emev { background: var(--teal-bg);   color: var(--teal);   border: 1px solid #99f6e4; }
+  .b-tipo { background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; display: inline-block; border: 1px solid var(--border); }
+  .resp { font-size: 12px; color: var(--text2); }
+  .resp-empty { color: var(--dim); }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: .875rem 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    flex-wrap: wrap;
+  }
+  .pg-info { font-size: 12px; color: var(--muted); flex: 1; }
+  .pg-controls { display: flex; align-items: center; gap: 6px; }
+  .pg-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    padding: 5px 11px;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .pg-sel {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    padding: 5px 24px 5px 8px;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 12px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    cursor: pointer;
+    outline: none;
+  }
+
+  #main { display: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="header-left">
+      <div class="eyebrow">Dashboard · Ao vivo</div>
+      <h1>Espelho de Simulados</h1>
+      <div class="subtitle">Distribuição e acompanhamento — ciclo 2026</div>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Atualizar
+      </button>
+      <div class="last-updated" id="lastUpdated"></div>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div class="state-box" id="stateLoad">
+    <div class="spinner"></div>
+    <div class="state-title">Carregando dados</div>
+    <div class="state-desc">Buscando planilha ao vivo…</div>
+  </div>
+
+  <!-- Error -->
+  <div class="state-box" id="stateErr" style="display:none">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="state-title">Não foi possível carregar</div>
+    <div class="state-desc" id="errMsg"></div>
+    <div class="state-desc" style="color:#9ca3af;font-size:12px;margin-top:-4px">Dica: abra o arquivo em um servidor local ou hospede-o online para evitar bloqueios de CORS.</div>
+    <button class="retry-btn" onclick="loadData()">↺ Tentar novamente</button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="q" placeholder="Buscar simulado, responsável..." oninput="applyFilter()">
+      </div>
+      <select id="fS" onchange="applyFilter()">
+        <option value="">Todos os status</option>
+        <option value="Concluído">Concluído</option>
+        <option value="Em andamento">Em andamento</option>
+      </select>
+      <select id="fV" onchange="applyFilter()">
+        <option value="">Todas verticais</option>
+        <option value="EM">EM</option>
+        <option value="EV">EV</option>
+        <option value="EMED">EMED</option>
+        <option value="EM/EV">EM/EV</option>
+      </select>
+      <select id="fT" onchange="applyFilter()">
+        <option value="">Todos os tipos</option>
+        <option value="Inédito">Inédito</option>
+        <option value="Diagnóstico">Diagnóstico</option>
+        <option value="Inédito - Presencial">Inédito - Presencial</option>
+        <option value="Não - Inédito">Não - Inédito</option>
+        <option value="Misto">Misto</option>
+      </select>
+      <select id="fR" onchange="applyFilter()"><option value="">Todos responsáveis</option></select>
+      <select id="fMes" onchange="onMesChange()" style="padding:7px 28px 7px 10px;font-family:inherit;font-size:13px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);color:var(--text2);outline:none;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 9px center">
+        <option value="">Mês/ano</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+        <label style="font-size:12px;color:var(--muted);white-space:nowrap">De</label>
+        <input type="date" id="fDe" onchange="onIntervalChange()" style="padding:7px 10px;font-family:inherit;font-size:13px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);color:var(--text);outline:none;cursor:pointer">
+        <label style="font-size:12px;color:var(--muted);white-space:nowrap">até</label>
+        <input type="date" id="fAte" onchange="onIntervalChange()" style="padding:7px 10px;font-family:inherit;font-size:13px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);color:var(--text);outline:none;cursor:pointer">
+      </div>
+      <button class="btn-reset" onclick="resetFilters()">Limpar</button>
+      <span class="count-badge" id="countLabel"></span>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th onclick="sort('Status')" id="th-Status">Status</th>
+            <th onclick="sort('Vertical')" id="th-Vertical">Vertical</th>
+            <th onclick="sort('Tipo')" id="th-Tipo">Tipo</th>
+            <th onclick="sort('Simulado')" id="th-Simulado">Simulado</th>
+            <th onclick="sort('Data Aplicação')" id="th-Data">Data</th>
+            <th onclick="sort('Qtde. Questões')" id="th-Q" style="text-align:center">Questões</th>
+            <th onclick="sort('Responsável')" id="th-Resp">Responsável</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pg"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+// Tenta múltiplos proxies CORS para garantir funcionamento local
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv';
+const PROXIES = [
+  url => url, // direto (funciona se estiver em servidor)
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
+
+let RAW=[], filtered=[], sortKey='', sortDir=1, page=0, ps=25;
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = splitCSVLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, j) => { obj[h.trim()] = (vals[j] || '').trim(); });
+    if (!obj['Simulado'] || !obj['Status'] || obj['Status'] === 'Aguardando novo simulado') continue;
+    rows.push(obj);
+  }
+  return rows;
+}
+
+async function tryFetch(url) {
+  for (const proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy(url) + (proxy === PROXIES[0] ? '&t=' + Date.now() : ''), { cache: 'no-store' });
+      if (res.ok) {
+        const text = await res.text();
+        if (text.includes(',')) return text; // sanity check
+      }
+    } catch(e) { /* try next */ }
+  }
+  throw new Error('Não foi possível buscar os dados. Verifique sua conexão e se a planilha está publicada.');
+}
+
+async function loadData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  document.getElementById('stateErr').style.display = 'none';
+  if (!RAW.length) {
+    document.getElementById('stateLoad').style.display = 'flex';
+    document.getElementById('main').style.display = 'none';
+  }
+  try {
+    const text = await tryFetch(SHEET_URL);
+    const data = parseCSV(text);
+    if (!data.length) throw new Error('Planilha sem dados válidos.');
+    RAW = data;
+    populateRespFilter();
+    populateMesFilter();
+    applyFilter();
+    document.getElementById('stateLoad').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent =
+      'Atualizado às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch(e) {
+    document.getElementById('stateLoad').style.display = 'none';
+    document.getElementById('stateErr').style.display = 'flex';
+    document.getElementById('errMsg').textContent = e.message;
+    if (RAW.length) document.getElementById('main').style.display = 'block';
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function populateRespFilter() {
+  const cur = document.getElementById('fR').value;
+  const set = new Set(RAW.map(r => r['Responsável']).filter(Boolean));
+  const sel = document.getElementById('fR');
+  sel.innerHTML = '<option value="">Todos responsáveis</option>';
+  [...set].sort().forEach(r => {
+    const o = document.createElement('option');
+    o.value = o.textContent = r;
+    if (r === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function parseDate(s) {
+  if (!s) return new Date('2099-01-01');
+  const [d,m,y] = s.split('/');
+  return new Date(+y, +m-1, +d);
+}
+
+function vBadge(v) {
+  const map = { EM:'b-em', EV:'b-ev', EMED:'b-emed', 'EM/EV':'b-emev' };
+  return `<span class="badge ${map[v]||'b-em'}">${v}</span>`;
+}
+function sBadge(s) {
+  return s === 'Concluído'
+    ? `<span class="badge b-ok"><span class="bdot"></span>Concluído</span>`
+    : `<span class="badge b-wip"><span class="bdot"></span>Em andamento</span>`;
+}
+
+function populateMesFilter() {
+  const months = new Set();
+  RAW.forEach(r => {
+    const d = r['Data Aplicação'];
+    if (d) {
+      const [,m,y] = d.split('/');
+      if (m && y) months.add(`${y}-${m}`);
+    }
+  });
+  const sel = document.getElementById('fMes');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Mês/ano</option>';
+  const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  [...months].sort().forEach(ym => {
+    const [y, m] = ym.split('-');
+    const o = document.createElement('option');
+    o.value = ym;
+    o.textContent = `${names[parseInt(m)-1]} ${y}`;
+    if (ym === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function onMesChange() {
+  const ym = document.getElementById('fMes').value;
+  if (ym) {
+    const [y, m] = ym.split('-');
+    const last = new Date(+y, +m, 0).getDate();
+    document.getElementById('fDe').value = `${y}-${m}-01`;
+    document.getElementById('fAte').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  }
+  applyFilter();
+}
+
+function onIntervalChange() {
+  document.getElementById('fMes').value = '';
+  applyFilter();
+}
+
+function applyFilter() {
+  const q = document.getElementById('q').value.toLowerCase();
+  const s = document.getElementById('fS').value;
+  const v = document.getElementById('fV').value;
+  const t = document.getElementById('fT').value;
+  const r = document.getElementById('fR').value;
+  const de = document.getElementById('fDe').value;
+  const ate = document.getElementById('fAte').value;
+  filtered = RAW.filter(row => {
+    if (s && row['Status'] !== s) return false;
+    if (v && row['Vertical'] !== v) return false;
+    if (t && row['Tipo'] !== t) return false;
+    if (r && row['Responsável'] !== r) return false;
+    if (q && !(
+      row['Simulado'].toLowerCase().includes(q) ||
+      (row['Responsável']||'').toLowerCase().includes(q) ||
+      row['Vertical'].toLowerCase().includes(q)
+    )) return false;
+    if (de || ate) {
+      const d = parseDate(row['Data Aplicação']);
+      if (de && d < new Date(de + 'T00:00:00')) return false;
+      if (ate && d > new Date(ate + 'T23:59:59')) return false;
+    }
+    return true;
+  });
+  if (sortKey) doSort();
+  page = 0;
+  buildStats();
+  render();
+}
+
+function sort(k) {
+  document.querySelectorAll('thead th').forEach(th => th.className = '');
+  sortDir = sortKey === k ? sortDir * -1 : 1;
+  sortKey = k;
+  const map = { 'Status':'th-Status','Vertical':'th-Vertical','Tipo':'th-Tipo','Simulado':'th-Simulado','Data Aplicação':'th-Data','Qtde. Questões':'th-Q','Responsável':'th-Resp' };
+  const th = document.getElementById(map[k]);
+  if (th) th.className = sortDir === 1 ? 'asc' : 'desc';
+  doSort(); page = 0; render();
+}
+
+function doSort() {
+  filtered.sort((a, b) => {
+    let va = a[sortKey]||'', vb = b[sortKey]||'';
+    if (sortKey === 'Data Aplicação') return sortDir * (parseDate(va) - parseDate(vb));
+    if (sortKey === 'Qtde. Questões') return sortDir * ((parseInt(va)||0) - (parseInt(vb)||0));
+    return sortDir * va.localeCompare(vb, 'pt-BR');
+  });
+}
+
+function resetFilters() {
+  ['q','fS','fV','fT','fR','fDe','fAte','fMes'].forEach(id => document.getElementById(id).value = '');
+  sortKey = ''; sortDir = 1;
+  document.querySelectorAll('thead th').forEach(th => th.className = '');
+  applyFilter();
+}
+
+function buildStats() {
+  const v = filtered;
+  const conc = v.filter(r => r['Status'] === 'Concluído').length;
+  const and = v.length - conc;
+  const q = v.reduce((a,r) => a + (parseInt(r['Qtde. Questões'])||0), 0);
+  const pct = v.length ? Math.round(conc / v.length * 100) : 0;
+  const em = v.filter(r => r['Vertical']==='EM' || r['Vertical']==='EM/EV').length;
+  const ev = v.filter(r => r['Vertical']==='EV' || r['Vertical']==='EM/EV').length;
+  const emed = v.filter(r => r['Vertical']==='EMED').length;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat"><div class="stat-label">Total</div><div class="stat-value">${v.length}</div><div class="stat-sub">simulados</div></div>
+    <div class="stat s-green"><div class="stat-label">Concluídos</div><div class="stat-value">${conc}</div><div class="stat-sub">${pct}% do total</div></div>
+    <div class="stat s-amber"><div class="stat-label">Em andamento</div><div class="stat-value">${and}</div></div>
+    <div class="stat s-blue"><div class="stat-label">Questões</div><div class="stat-value">${q.toLocaleString('pt-BR')}</div><div class="stat-sub">total</div></div>
+    <div class="stat"><div class="stat-label">EM</div><div class="stat-value">${em}</div></div>
+    <div class="stat"><div class="stat-label">EV</div><div class="stat-value">${ev}</div></div>
+    <div class="stat"><div class="stat-label">EMED</div><div class="stat-value">${emed}</div></div>`;
+}
+
+function render() {
+  const start = page * ps, slice = filtered.slice(start, start + ps);
+  document.getElementById('countLabel').textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+  const tb = document.getElementById('tbody');
+  if (!slice.length) {
+    tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--dim);font-size:13px">Nenhum resultado encontrado</td></tr>`;
+    document.getElementById('pg').innerHTML = '';
+    return;
+  }
+  tb.innerHTML = slice.map(r => `
+    <tr>
+      <td>${sBadge(r['Status'])}</td>
+      <td>${vBadge(r['Vertical'])}</td>
+      <td><span class="b-tipo">${r['Tipo']}</span></td>
+      <td class="sname" title="${r['Simulado']}">${r['Simulado']}</td>
+      <td class="mono">${r['Data Aplicação']}</td>
+      <td class="num">${r['Qtde. Questões']||'—'}</td>
+      <td><span class="${r['Responsável'] ? 'resp' : 'resp resp-empty'}">${r['Responsável']||'—'}</span></td>
+    </tr>`).join('');
+  renderPg();
+}
+
+function renderPg() {
+  const total = Math.ceil(filtered.length / ps);
+  const pg = document.getElementById('pg');
+  if (total <= 1) { pg.innerHTML = ''; return; }
+  pg.innerHTML = `
+    <span class="pg-info">Página ${page+1} de ${total} · ${filtered.length} registros</span>
+    <div class="pg-controls">
+      <button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← Anterior</button>
+      <button class="pg-btn" onclick="goPage(${page+1})" ${page>=total-1?'disabled':''}>Próxima →</button>
+      <select class="pg-sel" onchange="changePs(this.value)">
+        ${[25,50,100].map(n=>`<option value="${n}"${ps===n?' selected':''}>${n}/pág</option>`).join('')}
+      </select>
+    </div>`;
+}
+
+function goPage(n) { page = n; render(); }
+function changePs(v) { ps = parseInt(v); page = 0; render(); }
+
+loadData();
+</script>
+</body>
+</html>
