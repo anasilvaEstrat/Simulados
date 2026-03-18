@@ -1,0 +1,23 @@
+<table border="1" id="tabela"></table>
+
+<script>
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv")
+  .then(res => res.text())
+  .then(data => {
+    const linhas = data.split("\n");
+    let html = "";
+
+    linhas.forEach((linha, i) => {
+      const cols = linha.split(",");
+      html += "<tr>";
+      cols.forEach(col => {
+        html += i === 0 
+          ? `<th>${col}</th>` 
+          : `<td>${col}</td>`;
+      });
+      html += "</tr>";
+    });
+
+    document.getElementById("tabela").innerHTML = html;
+  });
+</script>
