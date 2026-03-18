@@ -8,12 +8,15 @@ fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9
     let html = "";
 
     linhas.forEach((linha, i) => {
-      const cols = linha.split(",");
+      if (!linha.trim()) return;
+
+      const cols = linha.split(";"); // <- AQUI
+
       html += "<tr>";
       cols.forEach(col => {
-        html += i === 0 
-          ? `<th>${col}</th>` 
-          : `<td>${col}</td>`;
+        html += i === 0
+          ? `<th>${col.trim()}</th>`
+          : `<td>${col.trim()}</td>`;
       });
       html += "</tr>";
     });
