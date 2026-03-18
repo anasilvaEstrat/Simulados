@@ -1,103 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Tabela de Simulados</title>
+
+<style>
+  body { font-family: Arial; padding: 20px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 8px; }
+  th { cursor: pointer; background: #f4f4f4; }
+  tr:nth-child(even) { background: #fafafa; }
+</style>
+</head>
+
+<body>
+
+<h2>Simulados</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th onclick="sort('Status')">Status</th>
+      <th onclick="sort('Vertical')">Vertical</th>
+      <th onclick="sort('Tipo')">Tipo</th>
+      <th onclick="sort('Simulado')">Simulado</th>
+      <th onclick="sort('DATA')">Data</th>
+      <th onclick="sort('QUESTÕES')">Questões</th>
+      <th onclick="sort('Responsável')">Responsável</th>
+    </tr>
+  </thead>
+
+  <tbody id="tbody"></tbody>
+</table>
+
 <script>
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv';
+const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv";
 
-let RAW=[], filtered=[], sortKey='', sortDir=1, page=0, ps=25;
+let dados = [];
+let ordem = 1;
+let colunaAtual = "";
 
-// ---------- CSV PARSER ----------
-function splitCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
+// -------- CSV parser correto --------
+function parseCSV(text) {
+  const linhas = [];
+  let linha = [];
+  let valor = "";
+  let dentroAspas = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
 
     if (c === '"') {
-      if (inQ && line[i+1] === '"') {
-        cur += '"';
-        i++;
-      } else {
-        inQ = !inQ;
-      }
-    } else if (c === ',' && !inQ) {
-      result.push(cur);
-      cur = '';
-    } else {
-      cur += c;
+      dentroAspas = !dentroAspas;
+    } 
+    else if (c === ',' && !dentroAspas) {
+      linha.push(valor);
+      valor = "";
+    } 
+    else if (c === '\n' && !dentroAspas) {
+      linha.push(valor);
+      linhas.push(linha);
+      linha = [];
+      valor = "";
+    } 
+    else {
+      valor += c;
     }
   }
 
-  result.push(cur);
-  return result;
+  return linhas;
 }
 
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  const headers = splitCSVLine(lines[0]);
+// -------- carregar dados --------
+fetch(URL + "&t=" + new Date().getTime())
+  .then(res => res.text())
+  .then(text => {
+    const tabela = parseCSV(text);
 
-  return lines.slice(1).map(line => {
-    const vals = splitCSVLine(line);
-    const obj = {};
-    headers.forEach((h, i) => {
-      obj[h.trim()] = (vals[i] || '').trim();
+    const headers = tabela[0];
+
+    dados = tabela.slice(1).map(linha => {
+      let obj = {};
+      headers.forEach((h, i) => {
+        obj[h.trim()] = (linha[i] || "").trim();
+      });
+      return obj;
     });
-    return obj;
+
+    render();
   });
+
+// -------- ordenar --------
+function sort(col) {
+  ordem = colunaAtual === col ? -ordem : 1;
+  colunaAtual = col;
+
+  dados.sort((a, b) => {
+
+    let va = a[col] || "";
+    let vb = b[col] || "";
+
+    if (col === "DATA") {
+      return ordem * (parseData(va) - parseData(vb));
+    }
+
+    if (col === "QUESTÕES") {
+      return ordem * ((parseInt(va)||0) - (parseInt(vb)||0));
+    }
+
+    return ordem * va.localeCompare(vb, 'pt-BR');
+  });
+
+  render();
 }
 
-// ---------- LOAD ----------
-async function loadData() {
-  const res = await fetch(SHEET_URL + '&t=' + Date.now());
-  const text = await res.text();
-
-  RAW = parseCSV(text);
-  applyFilter();
-}
-
-// ---------- DATE ----------
-function parseDate(s) {
+// -------- data --------
+function parseData(s) {
   if (!s) return new Date(2099,0,1);
-  const [d,m,y] = s.split('/');
-  return new Date(+y, +m-1, +d);
+  const [d,m,y] = s.split("/");
+  return new Date(y, m-1, d);
 }
 
-// ---------- FILTER ----------
-function applyFilter() {
-  filtered = [...RAW];
-
-  if (sortKey) doSort();
-
-  page = 0;
-  render();
-}
-
-// ---------- SORT ----------
-function sort(k) {
-  sortDir = sortKey === k ? -sortDir : 1;
-  sortKey = k;
-  doSort();
-  render();
-}
-
-function doSort() {
-  filtered.sort((a, b) => {
-    let va = a[sortKey] || '';
-    let vb = b[sortKey] || '';
-
-    if (sortKey === 'DATA')
-      return sortDir * (parseDate(va) - parseDate(vb));
-
-    if (sortKey === 'QUESTÕES')
-      return sortDir * ((parseInt(va)||0) - (parseInt(vb)||0));
-
-    return sortDir * va.localeCompare(vb, 'pt-BR');
-  });
-}
-
-// ---------- RENDER ----------
+// -------- render --------
 function render() {
-  const tbody = document.getElementById('tbody');
+  const tbody = document.getElementById("tbody");
 
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = dados.map(r => `
     <tr>
       <td>${r['Status']}</td>
       <td>${r['Vertical']}</td>
@@ -107,9 +135,9 @@ function render() {
       <td>${r['QUESTÕES']}</td>
       <td>${r['Responsável']}</td>
     </tr>
-  `).join('');
+  `).join("");
 }
-
-// ---------- INIT ----------
-loadData();
 </script>
+
+</body>
+</html>
