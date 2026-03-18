@@ -4,18 +4,44 @@
 fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv")
   .then(res => res.text())
   .then(text => {
-    const linhas = text.split("\n").filter(l => l.trim());
 
-    const tabela = linhas.map(linha => {
-      // regex que respeita aspas
-      const cols = linha.match(/(".*?"|[^",\t]+)(?=\s*,|\s*\t|$)/g);
+    function parseCSV(str) {
+      const linhas = [];
+      let linha = [];
+      let valor = "";
+      let dentroAspas = false;
 
-      return cols.map(c => c.replace(/^"|"$/g, "").trim());
-    });
+      for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+
+        if (char === '"') {
+          dentroAspas = !dentroAspas;
+        } 
+        else if (char === ',' && !dentroAspas) {
+          linha.push(valor);
+          valor = "";
+        } 
+        else if (char === '\n' && !dentroAspas) {
+          linha.push(valor);
+          linhas.push(linha);
+          linha = [];
+          valor = "";
+        } 
+        else {
+          valor += char;
+        }
+      }
+
+      return linhas;
+    }
+
+    const tabela = parseCSV(text);
 
     let html = "";
 
     tabela.forEach((linha, i) => {
+      if (!linha.length) return;
+
       html += "<tr>";
       linha.forEach(col => {
         html += i === 0
