@@ -3,28 +3,24 @@
 <script>
 fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vStxbC7N0Aax8R-8fbp69EyZ9vH3pWXSB7U6UeOAE88yed5EAiP5EmM-IiyuGAxMxNfbGwY7xx7gM1D/pub?gid=1188074275&single=true&output=csv")
   .then(res => res.text())
-  .then(data => {
-    const linhas = data.split("\n");
+  .then(text => {
+    const linhas = text.split("\n").filter(l => l.trim());
+
+    const tabela = linhas.map(linha => {
+      // regex que respeita aspas
+      const cols = linha.match(/(".*?"|[^",\t]+)(?=\s*,|\s*\t|$)/g);
+
+      return cols.map(c => c.replace(/^"|"$/g, "").trim());
+    });
+
     let html = "";
 
-    linhas.forEach((linha, i) => {
-      if (!linha.trim()) return;
-
-      // Detecta separador automaticamente
-      let cols;
-      if (linha.includes("\t")) {
-        cols = linha.split("\t");
-      } else if (linha.includes(";")) {
-        cols = linha.split(";");
-      } else {
-        cols = linha.split(",");
-      }
-
+    tabela.forEach((linha, i) => {
       html += "<tr>";
-      cols.forEach(col => {
+      linha.forEach(col => {
         html += i === 0
-          ? `<th>${col.trim()}</th>`
-          : `<td>${col.trim()}</td>`;
+          ? `<th>${col}</th>`
+          : `<td>${col}</td>`;
       });
       html += "</tr>";
     });
